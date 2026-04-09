@@ -1,1 +1,291 @@
-Reas
+ NEURALIS GEO
+
+**AI Visibility Platform — built by [Neuralis Black](https://neuralisblack.com)**
+
+Monitor and improve your brand's citation presence across AI-powered search engines: Perplexity, ChatGPT, and Claude. Built for European deep-tech startups in longevity, climate tech, and agentic AI.
+
+---
+
+## What it does
+
+Neuralis GEO runs structured queries against three major LLM engines, detects whether your brand is cited, scores the result on a 0–100 GEO scale, and generates prioritised remediation recommendations. Scores are tracked over time and delivered as monthly email reports.
+
+```
+Brand URL + Vertical + Description
+        ↓
+┌─────────────────────────────────────────┐
+│  GEO AUDIT ENGINE                       │
+│  5 queries × 3 LLMs = 15 data points   │
+│  Anthropic · OpenAI · Perplexity        │
+└─────────────────────────────────────────┘
+        ↓
+┌─────────────────────────────────────────┐
+│  SCORING ALGORITHM                      │
+│  Presence (40) + Coverage (25)          │
+│  + Position (20) + Sentiment (15)       │
+│  = GEO Score 0–100                      │
+└─────────────────────────────────────────┘
+        ↓
+  Airtable (persistent storage)
+        ↓
+  Dashboard + Monthly Email Report
+```
+
+---
+
+## GEO Score Tiers
+
+| Tier  | Score  | Label     | Meaning |
+|-------|--------|-----------|---------|
+| GEO-5 | 85–100 | Dominant  | AI-citable across all major engines |
+| GEO-4 | 65–84  | Strong    | Cited consistently, minor gaps |
+| GEO-3 | 45–64  | Moderate  | Partial citation, improvement needed |
+| GEO-2 | 25–44  | Weak      | Occasional citation, significant gaps |
+| GEO-1 | 0–24   | Invisible | Not present in AI search index |
+
+---
+
+## Tech Stack
+
+| Layer       | Technology |
+|-------------|------------|
+| Framework   | Next.js 14 (App Router) |
+| Styling     | Tailwind CSS |
+| Database    | Airtable |
+| Auth        | NextAuth.js (magic link) |
+| LLM APIs    | Anthropic, OpenAI, Perplexity |
+| Charts      | Recharts |
+| Email       | Nodemailer |
+| Deployment  | Vercel (recommended) |
+| Scheduler   | GitHub Actions |
+
+---
+
+## Quick Start
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/YOUR_USERNAME/neuralis-geo.git
+cd neuralis-geo
+npm install
+```
+
+### 2. Set up Airtable
+
+Create a new Airtable base with four tables:
+
+**Clients**
+| Field | Type |
+|-------|------|
+| Name | Single line text |
+| Email | Email |
+| Brand | Single line text |
+| URL | URL |
+| Vertical | Single line text |
+| Description | Long text |
+| Plan | Single select: starter, pro, agency |
+| Active | Checkbox |
+| Created | Date |
+| LastAudit | Date |
+
+**Audits**
+| Field | Type |
+|-------|------|
+| ClientId | Single line text |
+| Brand | Single line text |
+| AuditedAt | Date |
+| DurationMs | Number |
+| TotalQueries | Number |
+| SuccessfulQueries | Number |
+| RawResults | Long text |
+
+**Scores**
+| Field | Type |
+|-------|------|
+| ClientId | Single line text |
+| AuditId | Single line text |
+| Brand | Single line text |
+| Score | Number |
+| Tier | Single line text |
+| TierLabel | Single line text |
+| PresenceScore | Number |
+| CoverageScore | Number |
+| PositionScore | Number |
+| SentimentScore | Number |
+| CitationCount | Number |
+| ScoredAt | Date |
+| EngineBreakdown | Long text |
+
+**Recommendations**
+| Field | Type |
+|-------|------|
+| ClientId | Single line text |
+| AuditId | Single line text |
+| Priority | Number |
+| Category | Single line text |
+| Action | Long text |
+| Impact | Single select: High, Medium, Low |
+| Effort | Single select: Low, Medium, High |
+| Rationale | Long text |
+| Resolved | Checkbox |
+| ResolvedAt | Date |
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in your keys:
+
+```env
+ANTHROPIC_API_KEY=...
+OPENAI_API_KEY=...
+PERPLEXITY_API_KEY=...
+AIRTABLE_API_KEY=...        # Personal Access Token
+AIRTABLE_BASE_ID=...        # From Airtable URL: airtable.com/BASEID/...
+NEXTAUTH_SECRET=...         # openssl rand -base64 32
+NEXTAUTH_URL=http://localhost:3000
+SMTP_HOST=smtp.zoho.com
+SMTP_PORT=465
+SMTP_USER=you@yourdomain.com
+SMTP_PASS=...
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### 4. Run
+
+```bash
+npm run dev
+```
+
+Visit `http://localhost:3000/onboard` to create your first client.
+
+---
+
+## Routes
+
+| Route | Description |
+|-------|-------------|
+| `/onboard` | Self-serve client signup (3-step) |
+| `/auth/signin` | Magic link sign-in |
+| `/dashboard` | Client GEO monitoring dashboard |
+| `POST /api/audit` | Trigger a GEO audit |
+| `GET /api/dashboard` | Fetch dashboard data |
+| `POST /api/clients` | Create a new client |
+| `POST /api/reports` | Send monthly email report |
+| `PATCH /api/recommendations/[id]` | Resolve a recommendation |
+
+---
+
+## Scheduler
+
+### Manual audit (single client)
+```bash
+node scripts/run-audit.js --email client@company.com
+```
+
+### Manual audit (all clients)
+```bash
+node scripts/run-audit.js
+```
+
+### Dry run (no audit, list only)
+```bash
+node scripts/run-audit.js --dry-run
+```
+
+### Send reports manually
+```bash
+node scripts/send-reports.js
+```
+
+### GitHub Actions (automatic monthly)
+Add secrets to your GitHub repo (`Settings → Secrets`):
+- `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `PERPLEXITY_API_KEY`
+- `AIRTABLE_API_KEY`, `AIRTABLE_BASE_ID`
+- `NEXTAUTH_SECRET`, `NEXT_PUBLIC_APP_URL`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+
+The workflow runs automatically on the 1st of every month at 06:00 UTC.
+Manual trigger available via GitHub Actions UI.
+
+---
+
+## Deploy to Vercel
+
+```bash
+npm i -g vercel
+vercel
+```
+
+Add all `.env.local` variables to Vercel's Environment Variables dashboard.
+
+---
+
+## Project Structure
+
+```
+neuralis-geo/
+├── .github/workflows/
+│   └── monthly-audit.yml       # GitHub Actions cron
+├── scripts/
+│   ├── run-audit.js            # Audit scheduler (Node)
+│   └── send-reports.js         # Report sender (Node)
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── audit/          # POST — trigger audit
+│   │   │   ├── clients/        # POST/GET — client management
+│   │   │   ├── dashboard/      # GET — dashboard data
+│   │   │   ├── recommendations/[id]/  # PATCH — resolve rec
+│   │   │   └── reports/        # POST/GET — email reports
+│   │   ├── auth/signin/        # Magic link sign-in page
+│   │   ├── dashboard/          # Client dashboard UI
+│   │   ├── onboard/            # 3-step signup
+│   │   ├── layout.jsx
+│   │   └── globals.css
+│   ├── components/
+│   │   ├── charts/
+│   │   │   ├── ScoreGauge.jsx
+│   │   │   ├── TrendChart.jsx
+│   │   │   └── DimensionBars.jsx
+│   │   ├── ui/
+│   │   │   ├── EngineBreakdown.jsx
+│   │   │   └── RecommendationsList.jsx
+│   │   └── layout/
+│   │       └── TopBar.jsx
+│   └── lib/
+│       ├── audit-engine.js     # Core LLM query layer
+│       ├── scoring.js          # GEO scoring algorithm
+│       ├── airtable.js         # Database layer
+│       └── auth.js             # NextAuth config
+├── .env.example
+├── .gitignore
+├── next.config.js
+├── tailwind.config.js
+└── package.json
+```
+
+---
+
+## Pricing
+
+| Plan | Price | Audits |
+|------|-------|--------|
+| Starter | €199/mo | Monthly |
+| Pro | €499/mo | Weekly |
+| Agency | €1,200/mo | Daily · 5 brands |
+
+---
+
+## Built by
+
+**Neuralis Black** — GEO Strategy · Agentic UX · No-Code Systems  
+[neuralisblack.com](https://neuralisblack.com) · [initiate@neuralisblack.com](mailto:initiate@neuralisblack.com)
+
+---
+
+*© 2026 Neuralis Black. All rights reserved.*
+
