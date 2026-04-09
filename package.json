@@ -11,14 +11,14 @@
     "send-reports": "node scripts/send-reports.js"
   },
   "dependencies": {
-    "next": "14.2.3",
-    "react": "^18",
-    "react-dom": "^18",
+    "next": "15.2.9",
+    "react": "^19",
+    "react-dom": "^19",
     "airtable": "^0.12.2",
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.13",
+    "nodemailer": "^7.0.11",
     "openai": "^4.47.1",
     "cheerio": "^1.0.0-rc.12",
     "puppeteer": "^22.8.2"
@@ -26,7 +26,7 @@
   "devDependencies": {
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
-    "eslint-config-next": "14.2.3",
+    "eslint-config-next": "15.2.9",
     "postcss": "^8",
     "tailwindcss": "^3.3.0"
   }
